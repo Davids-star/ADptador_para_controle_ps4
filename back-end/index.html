@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS4 Roteador Bluetooth</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 50px 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        #status {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc3545; /* Red until connected */
+            margin: 30px 0;
+            padding: 15px 30px;
+            border-radius: 10px;
+            background-color: #222;
+        }
+        .info {
+            color: #aaa;
+            font-size: 14px;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+        .connected-status {
+            color: #28a745 !important; /* Green */
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Modo Roteador PS4</h1>
+    <p class="info">Conecte o seu controle de PS4 ao Bluetooth do celular e aperte os botões. A tela deve ficar com as luzes verdes.</p>
+    
+    <div id="status">Aguardando Conexão...</div>
+    
+    <div class="info" style="margin-top:20px;">
+        Este celular está convertendo o sinal nativo do Gamepad e jogando via Wi-Fi para o computador!
+    </div>
+
+    <script>
+        const statusEl = document.getElementById("status");
+        
+        // Descobre automaticamente o IP do servidor Python baseado no IP da URL
+        const host = window.location.hostname;
+        const ws = new WebSocket(`ws://${host}:5000`);
+
+        ws.onopen = () => {
+            statusEl.innerText = "🔌 Conectado ao PC! Pressione um botão no PS4...";
+            statusEl.style.color = "#ffc107"; // Yellow waiting for gamepad
+        };
+
+        ws.onclose = () => {
+            statusEl.innerText = "Desconectado do PC. Atualize a página.";
+            statusEl.className = "";
+        };
+
+        const lastState = { buttons: [], axes: [] };
+        
+        function sendMsg(msg) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(msg + '\n');
+            }
+        }
+
+        function pollGamepads() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            const gp = gamepads[0];
+
+            if (gp) {
+                statusEl.innerText = "✅ CONTROLE ATIVO E ENVIANDO SINAIS!";
+                statusEl.classList.add("connected-status");
+
+                const map = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START', 'L3', 'R3', 'UP', 'DOWN', 'LEFT', 'RIGHT'];
+                
+                // Botões
+                gp.buttons.forEach((b, idx) => {
+                    const wasPressed = lastState.buttons[idx] || false;
+                    if (b.pressed !== wasPressed) {
+                        lastState.buttons[idx] = b.pressed;
+                        const btnName = map[idx];
+                        if (btnName) {
+                            if (btnName === 'LT' || btnName === 'RT') {
+                                sendMsg(`trigger,${btnName},${b.pressed ? 1.0 : 0.0}`);
+                            } else {
+                                sendMsg(`button,${btnName},${b.pressed ? 'true' : 'false'}`);
+                            }
+                        }
+                    }
+                    if ((idx === 6 || idx === 7) && typeof b.value === 'number') {
+                        const gatilhoNome = idx === 6 ? 'LT' : 'RT';
+                        const oldVal = lastState.axes[gatilhoNome] || 0;
+                        if (Math.abs(b.value - oldVal) > 0.05) {
+                            lastState.axes[gatilhoNome] = b.value;
+                            sendMsg(`trigger,${gatilhoNome},${b.value}`);
+                        }
+                    }
+                });
+
+                // Eixos
+                const getEixo = (v) => Math.abs(v) > 0.1 ? v : 0.0;
+                
+                const lx = getEixo(gp.axes[0] || 0);
+                const ly = getEixo(gp.axes[1] || 0);
+                if (lx !== (lastState.axes[0]||0) || ly !== (lastState.axes[1]||0)) {
+                    lastState.axes[0] = lx;
+                    lastState.axes[1] = ly;
+                    sendMsg(`joystick,left,${lx},${ly}`);
+                }
+
+                const rx = getEixo(gp.axes[2] || 0);
+                const ry = getEixo(gp.axes[3] || 0);
+                if (rx !== (lastState.axes[2]||0) || ry !== (lastState.axes[3]||0)) {
+                    lastState.axes[2] = rx;
+                    lastState.axes[3] = ry;
+                    sendMsg(`joystick,right,${rx},${ry}`);
+                }
+            }
+            requestAnimationFrame(pollGamepads);
+        }
+        
+        requestAnimationFrame(pollGamepads);
+    </script>
+</body>
+</html>
