@@ -5,6 +5,14 @@ from dotenv import load_dotenv
 import os
 import signal
 import sys
+import psutil
+
+try:
+    p = psutil.Process(os.getpid())
+    if sys.platform == "win32":
+        p.nice(psutil.HIGH_PRIORITY_CLASS)
+except:
+    pass
 
 import http.server
 import socketserver
@@ -20,31 +28,42 @@ HOST = "0.0.0.0"
 PORT = int(os.getenv("PORT") or 5000)
 WEB_PORT = 8080
 
-def get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except:
-        return "127.0.0.1"
+def get_all_local_ips():
+    ips = set()
+    for interface, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == socket.AF_INET and not addr.address.startswith("127.") and not addr.address.startswith("169.254."):
+                ips.add(addr.address)
+    
+    if not ips:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ips.add(s.getsockname()[0])
+            s.close()
+        except:
+            ips.add("127.0.0.1")
+            
+    return list(ips)
 
 def start_web_server():
-    local_ip = get_local_ip()
-    url = f"http://{local_ip}:{WEB_PORT}"
-    
-    # Gera o QR Code Dinâmico no Terminal!
-    qr = qrcode.QRCode(version=1, box_size=1, border=2)
-    qr.add_data(url)
-    qr.make(fit=True)
+    local_ips = get_all_local_ips()
     
     print("\n" + "="*50)
-    print(f"🌍 ACESSE A CAMERA DO CELULAR E ESCANEIE AQUI:")
+    print("🌍 MÚLTIPLAS REDES DETECTADAS")
+    print("Certifique-se de que o celular e o PC estão na mesma rede!")
+    print("Tente escanear as opções abaixo:")
     print("="*50 + "\n")
-    qr.print_ascii(invert=True)
-    print(f"\nOu acesse no navegador: {url}")
-    print("="*50 + "\n")
+    
+    for ip in local_ips:
+        url = f"http://{ip}:{WEB_PORT}"
+        print(f"➜ NOVO QR CODE PARA O IP: {ip}")
+        qr = qrcode.QRCode(version=1, box_size=1, border=2)
+        qr.add_data(url)
+        qr.make(fit=True)
+        qr.print_ascii(invert=True)
+        print(f"Acesso via URL: {url}\n")
+        print("-" * 50)
 
     Handler = http.server.SimpleHTTPRequestHandler
     with socketserver.TCPServer((HOST, WEB_PORT), Handler) as httpd:
@@ -66,56 +85,33 @@ async def handler(websocket):
                 msg_type = parts[0]
 
                 # 🎮 BOTÃO
-                if msg_type == "button":
-                    try:
-                        button_name = parts[1].strip()
-                        pressed = parts[2].strip().lower() == 'true'
+                if msg_type == "b":
+                    button_name = parts[1]
+                    pressed = parts[2] == '1'
 
-                        if button_name in controle.botoes:
-                            if pressed:
-                                print(f"🎮 Botão {button_name} APERTADO")
-                                controle.press_button(button_name)
-                                await websocket.send(f"Botão {button_name} pressionado")
-                            else:
-                                print(f"🎮 Botão {button_name} SOLTO")
-                                controle.release_button(button_name)
-                        elif button_name in ["UP", "DOWN", "LEFT", "RIGHT"]:
-                            if pressed:
-                                print(f"🕹️ Seta {button_name} APERTADA")
-                                controle.move_setas(button_name)
-                            else:
-                                print(f"🕹️ Seta {button_name} SOLTA")
-                                controle.release_setas(button_name)
-                    except (ValueError, IndexError) as e:
-                        print("Erro lendo botão:", e)
-
+                    if button_name in controle.botoes:
+                        if pressed:
+                            controle.press_button(button_name)
+                        else:
+                            controle.release_button(button_name)
+                    elif button_name in ("UP", "DOWN", "LEFT", "RIGHT"):
+                        if pressed:
+                            controle.move_setas(button_name)
+                        else:
+                            controle.release_setas(button_name)
 
                 # 🕹️ JOYSTICK
-                elif msg_type == "joystick":
-                    try:
-                        side = parts[1].strip()
-                        x = float(parts[2])
-                        y = -float(parts[3])  # Eixo Y INVERTIDO
-                        x_int = int(max(-1, min(1, x)) * 32767)
-                        y_int = int(max(-1, min(1, y)) * 32767)
-                        controle.move_joystick(x_int, y_int, side)
-                        print(f"🕹️ Joystick {side.upper()} Movido: {x:.2f}, {y:.2f}")
-                    except ValueError:
-                        pass
+                elif msg_type == "j":
+                    x_int = int(max(-1, min(1, float(parts[2]))) * 32767)
+                    y_int = int(max(-1, min(1, -float(parts[3]))) * 32767)
+                    controle.move_joystick(x_int, y_int, 'left' if parts[1] == 'l' else 'right')
 
                 # 🎯 GATILHO
-                elif msg_type == "trigger":
-                    try:
-                        trigger_name = parts[1].strip()
-                        value = float(parts[2])
-                        valor = int(max(0, min(1, value)) * 255)
-                        controle.set_gatilhos(trigger_name, valor)
-                        if value > 0:
-                            print(f"🎯 Gatilho {trigger_name} PRESSIONADO ({valor})")
-                        else:
-                            print(f"🎯 Gatilho {trigger_name} SOLTO")
-                    except (ValueError, IndexError):
-                        pass
+                elif msg_type == "t":
+                    controle.set_gatilhos(parts[1], int(max(0, min(1, float(parts[2]))) * 255))
+
+            # ATUALIZA O ESTADO UMA ÚNICA VEZ APÓS LER AS MENSAGENS DESTE PACOTE
+            controle.update()
 
     except websockets.exceptions.ConnectionClosed:
         print(f"[{client_ip}] Desconectado")
