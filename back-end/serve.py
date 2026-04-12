@@ -66,7 +66,11 @@ def start_web_server():
         print("-" * 50)
 
     Handler = http.server.SimpleHTTPRequestHandler
-    with socketserver.TCPServer((HOST, WEB_PORT), Handler) as httpd:
+    # Garante que a porta seja liberada rapidamente após o servidor ser encerrado
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+
+    with ReusableTCPServer((HOST, WEB_PORT), Handler) as httpd:
         httpd.serve_forever()
 
 threading.Thread(target=start_web_server, daemon=True).start()
@@ -199,7 +203,11 @@ def start_web_server():
         print("-" * 50)
 
     Handler = http.server.SimpleHTTPRequestHandler
-    with socketserver.TCPServer((HOST, WEB_PORT), Handler) as httpd:
+    # Garante que a porta seja liberada rapidamente após o servidor ser encerrado
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+
+    with ReusableTCPServer((HOST, WEB_PORT), Handler) as httpd:
         httpd.serve_forever()
 
 threading.Thread(target=start_web_server, daemon=True).start()
