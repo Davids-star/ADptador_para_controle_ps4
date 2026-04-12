@@ -23,19 +23,16 @@ class Controle:
     def press_button(self, nome):
         if nome in self.botoes:
             self.gamepad.press_button(button=self.botoes[nome])
-            self.gamepad.update()
 
     def release_button(self, nome):
         if nome in self.botoes:
             self.gamepad.release_button(button=self.botoes[nome])
-            self.gamepad.update()
 
     def move_joystick(self, x_value, y_value, side="left"):
         if side == "left":
             self.gamepad.left_joystick(x_value=x_value, y_value=y_value)
         else:
             self.gamepad.right_joystick(x_value=x_value, y_value=y_value)
-        self.gamepad.update()
     
     def move_setas(self, direcao):
         mapa ={
@@ -46,7 +43,6 @@ class Controle:
         }
         if direcao in mapa:
             self.gamepad.press_button(button=mapa[direcao])
-        self.gamepad.update()
 
     
     def release_setas(self, direcao):
@@ -58,7 +54,6 @@ class Controle:
         ]:
         
             self.gamepad.release_button(button=d)
-        self.gamepad.update()
 
     def set_gatilhos(self, nome, valor):
         if nome == "LT":
@@ -66,6 +61,7 @@ class Controle:
         elif nome == "RT":
             self.gamepad.right_trigger(value=valor)
 
+    def update(self):
         self.gamepad.update()
 
         
