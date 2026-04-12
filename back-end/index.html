@@ -131,10 +131,9 @@
                     sendMsg(`joystick,right,${rx},${ry}`);
                 }
             }
-            requestAnimationFrame(pollGamepads);
         }
         
-        requestAnimationFrame(pollGamepads);
+        setInterval(pollGamepads, 5);
     </script>
 </body>
 </html>
