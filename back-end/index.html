@@ -96,9 +96,9 @@
                         const btnName = map[idx];
                         if (btnName) {
                             if (btnName === 'LT' || btnName === 'RT') {
-                                sendMsg(`trigger,${btnName},${b.pressed ? 1.0 : 0.0}`);
+                                sendMsg(`t,${btnName},${b.pressed ? 1.0 : 0.0}`);
                             } else {
-                                sendMsg(`button,${btnName},${b.pressed ? 'true' : 'false'}`);
+                                sendMsg(`b,${btnName},${b.pressed ? '1' : '0'}`);
                             }
                         }
                     }
@@ -107,7 +107,7 @@
                         const oldVal = lastState.axes[gatilhoNome] || 0;
                         if (Math.abs(b.value - oldVal) > 0.05) {
                             lastState.axes[gatilhoNome] = b.value;
-                            sendMsg(`trigger,${gatilhoNome},${b.value}`);
+                            sendMsg(`t,${gatilhoNome},${b.value}`);
                         }
                     }
                 });
@@ -120,7 +120,7 @@
                 if (lx !== (lastState.axes[0]||0) || ly !== (lastState.axes[1]||0)) {
                     lastState.axes[0] = lx;
                     lastState.axes[1] = ly;
-                    sendMsg(`joystick,left,${lx},${ly}`);
+                    sendMsg(`j,l,${lx},${ly}`);
                 }
 
                 const rx = getEixo(gp.axes[2] || 0);
@@ -128,12 +128,13 @@
                 if (rx !== (lastState.axes[2]||0) || ry !== (lastState.axes[3]||0)) {
                     lastState.axes[2] = rx;
                     lastState.axes[3] = ry;
-                    sendMsg(`joystick,right,${rx},${ry}`);
+                    sendMsg(`j,r,${rx},${ry}`);
                 }
             }
+            requestAnimationFrame(pollGamepads);
         }
         
-        setInterval(pollGamepads, 5);
+        requestAnimationFrame(pollGamepads);
     </script>
 </body>
 </html>
