@@ -108,8 +108,3 @@ Para menor latência, use **USB Tethering** em vez de Wi-Fi:
 - **vgamepad + ViGEmBus** — Emulação de gamepad virtual no Windows
 - **HTML/CSS/JS** — Interface web no celular
 
----
-
-## 📄 Licença
-
-MIT — Fique à vontade para usar, modificar e contribuir!
