@@ -88,13 +88,6 @@ Toque na tela após conectar o controle. O status deve mudar para:
 | `Pillow` | Dependência do qrcode |
 
 ---
-
-## 🔧 Configuração opcional (`.env`)
-
-```env
-PORT=5000
-```
-
 ---
 
 ## ⚡ Dica de performance — USB Tethering
