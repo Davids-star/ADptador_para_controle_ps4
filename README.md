@@ -12,25 +12,10 @@ Use seu **controle de PS4** conectado ao celular via Bluetooth para jogar no **P
 
 1. O controle de PS4 se conecta ao **celular via Bluetooth**
 2. O celular acessa uma **página web** servida pelo PC
-3. O navegador do celular lê os inputs do controle via [Gamepad API](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API)
+3. O navegador do celular lê os inputs do controle via [Gamepad API]
 4. Os dados são enviados em tempo real para o PC via **WebSocket**
 5. O PC recebe os dados e simula um **controle virtual Xbox** (usando `vgamepad`)
 6. O jogo no PC detecta o controle como se fosse um gamepad físico conectado
-
----
-
-## 🗂️ Estrutura do Projeto
-
-```
-ps4/
-├── back-end/
-│   ├── serve.py       # Servidor WebSocket + servidor HTTP (serve o index.html)
-│   ├── main.py        # Classe Controle — simula o gamepad virtual no PC
-│   └── index.html     # Interface web aberta no celular (capta inputs via Gamepad API)
-├── requirements.txt   # Dependências Python
-├── iniciar.bat        # Script para iniciar o servidor no Windows
-└── .env               # Configurações de porta (opcional)
-```
 
 ---
 
@@ -39,7 +24,7 @@ ps4/
 - **Windows 10/11** (necessário para o driver `vgamepad`)
 - **Python 3.10+**
 - **ViGEmBus Driver** instalado → [Download aqui](https://github.com/nefarius/ViGEmBus/releases)
-- Um celular com **Chrome ou Edge** (suporte à Gamepad API)
+- Um celular para ser usado como transmisor de sinal entre o controle e o pc
 - Controle de PS4
 
 ---
@@ -49,13 +34,19 @@ ps4/
 ### 1. Instale o ViGEmBus
 Baixe e instale o driver em: https://github.com/nefarius/ViGEmBus/releases
 
-### 2. Clone o repositório
-```bash
-git clone https://github.com/seu-usuario/seu-repo.git
-cd seu-repo
-```
+### 2.Baixe o arquivo
+Para ficar mais fácil de você utilizar, coloque o arquivo baixado na sua pasta de:
 
-### 3. Inicie o servidor
+---
+
+```
+[windows --> Usuários --> (Seu usuário) --> cole aqui]
+
+Obs: coloque também o arquivo .bat na mesma área e depois pra algo mais rápido, só acessar com o cmm  e digitar o nome do arquivo
+```
+---
+
+## 3. Inicie o servidor
 Dê dois cliques em **`iniciar.bat`** ou rode no terminal:
 ```bash
 iniciar.bat
@@ -64,6 +55,7 @@ O script vai:
 - Ativar o ambiente virtual (`.venv`)
 - Instalar as dependências automaticamente
 - Iniciar o servidor
+  Só dará certo se você baixar o ViGEmBus, pois é ele que faz o sistema reconhecer que existe um controle
 
 ### 4. Conecte o celular
 Após iniciar, o terminal vai exibir **QR Codes** para cada rede disponível.
@@ -71,6 +63,7 @@ Após iniciar, o terminal vai exibir **QR Codes** para cada rede disponível.
 - Escaneie o QR Code com o celular
 - Certifique-se de que PC e celular estão **na mesma rede Wi-Fi**
   > 💡 Você também pode usar **USB Tethering** para conexão mais rápida e sem latência!
+  > Você ativa o  **USB Tethering** e escaneia o **QR codes** para poder jogar
 
 ### 5. Conecte o controle PS4 no celular
 - Ative o Bluetooth no celular
@@ -80,15 +73,6 @@ Após iniciar, o terminal vai exibir **QR Codes** para cada rede disponível.
 ### 6. Abra a página no celular e jogue!
 Toque na tela após conectar o controle. O status deve mudar para:
 > ✅ **CONTROLE ATIVO E ENVIANDO SINAIS!**
-
----
-
-## 🌐 Portas utilizadas
-
-| Porta | Uso |
-|-------|-----|
-| `8080` | Servidor HTTP (página web para o celular) |
-| `5000` | Servidor WebSocket (comunicação em tempo real) |
 
 ---
 
