@@ -35,14 +35,14 @@ Use seu **controle de PS4** conectado ao celular via Bluetooth para jogar no **P
 Baixe e instale o driver em: https://github.com/nefarius/ViGEmBus/releases
 
 ### 2.Baixe o arquivo
-Para ficar mais fácil de você utilizar, coloque o arquivo baixado na sua pasta de:
+Para ficar mais fácil de você utilizar, coloque o arquivo *back-end*  baixado na sua pasta de:
 
 ---
 
 ```
 [windows --> Usuários --> (Seu usuário) --> cole aqui]
 
-Obs: coloque também o arquivo .bat na mesma área e depois pra algo mais rápido, só acessar com o cmm  e digitar o nome do arquivo
+Obs: coloque também o arquivo *iniciar.bat* na mesma área e depois pra algo mais rápido, só acessar com o cmm  e digitar o nome do arquivo
 ```
 ---
 
