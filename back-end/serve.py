@@ -26,7 +26,7 @@ controle = Controle()
 
 # Força o servidor a escutar de todas as redes locais, e não apenas de um adaptador!
 HOST = "0.0.0.0"
-PORT = int(os.getenv("PORT") or 5000)
+PORT = int(os.getenv("PORT") or 8080)
 WEB_PORT = 8080
 
 def get_all_local_ips():
